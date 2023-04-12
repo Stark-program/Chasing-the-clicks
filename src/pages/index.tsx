@@ -2,28 +2,29 @@ import Head from "next/head";
 import { useState } from "react";
 import type { GetServerSideProps } from "next";
 import { prisma } from "~/server/db";
-
+import axios, { type AxiosResponse } from "axios";
 const Home = ({ clicks }: Props) => {
   const [numberOfClicks, setNumberOfClicks] = useState<number>(clicks);
   const [buttonDisable, setButtonDisable] = useState(false);
 
-  const updateClicks = async () => {
+  const updateClicks = () => {
     setButtonDisable(true);
-    const res = await fetch("http://localhost:3000/api/click", {
-      method: "POST",
-    });
-    if (res.status === 201) {
-      const json: unknown = await res.json();
-      const updatedCount = json as { count: number };
-      setNumberOfClicks(updatedCount.count);
-      setButtonDisable(false);
-    }
+    axios
+      .post("/api/click")
+      .then((response: AxiosResponse) => {
+        if (response.status === 201) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+          setNumberOfClicks(response.data.count);
+          setButtonDisable(false);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   const handleClick = () => {
-    updateClicks().catch((err) => {
-      console.log(err);
-    });
+    updateClicks();
   };
   return (
     <>
@@ -58,6 +59,9 @@ const Home = ({ clicks }: Props) => {
 type Props = {
   clicks: number;
 };
+interface Response {
+  [key: string]: number;
+}
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const res = await prisma.click.findFirst();
