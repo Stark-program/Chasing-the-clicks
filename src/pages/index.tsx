@@ -59,9 +59,6 @@ const Home = ({ clicks }: Props) => {
 type Props = {
   clicks: number;
 };
-interface Response {
-  [key: string]: number;
-}
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const res = await prisma.click.findFirst();
